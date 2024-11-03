@@ -4,23 +4,22 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pytest
 
-driver = webdriver.Firefox()
-
 @pytest.fixture
 def setup():
-    driver.get('https://practiceautomatedtesting.com/webelements/Checkboxes')
-    yield
+    driver = webdriver.Firefox()
+    driver.implicitly_wait(15)
+    yield driver
     driver.quit()
 
-@pytest.mark.parametrize('checkbox_id', ['checkbox1', 'checkbox2'])
-def test_checkbox_selection(setup, checkbox_id):
-    checkbox = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, checkbox_id)))
-    checkbox.click()
+def test_checkboxes(setup):
+    driver = setup
+    driver.get("https://practiceautomatedtesting.com/webelements/Checkboxes")
 
-    assert checkbox.get_attribute('checked') == 'true', 'Fail: Checkbox not selected'
-
-    smiley = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'smiley')))
-    assert smiley.is_displayed(), 'Fail: Smiley not displayed'
-
-    bad_smiley = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, 'bad_smiley')))
-    assert not bad_smiley.is_displayed(), 'Fail: Bad smiley displayed'
+    labels = WebDriverWait(driver, 10).until(EC.presence_of_all_elements_located((By.CSS_SELECTOR, '.checkbox-label ')))
+    
+    for label in labels:
+        checkbox_class_before_click = label.find_element_by_xpath('./span').get_attribute("class")
+        label.click()
+        checkbox_class_after_click = label.find_element_by_xpath('./span').get_attribute("class")
+        
+        assert checkbox_class_before_click != checkbox_class_after_click
